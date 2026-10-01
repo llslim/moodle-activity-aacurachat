@@ -94,14 +94,14 @@ class mod_aacurachat_mod_form extends moodleform_mod {
         // Per-activity conversation settings (override site-wide global defaults).
         $mform->addElement('header', 'aacuraactivitysettings', get_string('activitysettings', 'mod_aacurachat'));
 
-        $maxoptions = [0 => get_string('max_turns_default', 'mod_aacurachat')];
+        $minoptions = [0 => get_string('min_turns_default', 'mod_aacurachat')];
         for ($i = 4; $i <= 20; $i++) {
-            $maxoptions[$i] = $i . ' ' . get_string('turns', 'mod_aacurachat');
+            $minoptions[$i] = $i . ' ' . get_string('turns', 'mod_aacurachat');
         }
-        $mform->addElement('select', 'max_turns', get_string('max_turns', 'mod_aacurachat'), $maxoptions);
-        $mform->setDefault('max_turns', 0);
-        $mform->setType('max_turns', PARAM_INT);
-        $mform->addHelpButton('max_turns', 'max_turns', 'mod_aacurachat');
+        $mform->addElement('select', 'min_turns', get_string('min_turns', 'mod_aacurachat'), $minoptions);
+        $mform->setDefault('min_turns', 0);
+        $mform->setType('min_turns', PARAM_INT);
+        $mform->addHelpButton('min_turns', 'min_turns', 'mod_aacurachat');
 
         $intensitylevels = [
             '' => get_string('parent_intensity_default', 'mod_aacurachat'),
@@ -121,6 +121,20 @@ class mod_aacurachat_mod_form extends moodleform_mod {
 
         // Add standard buttons.
         $this->add_action_buttons();
+    }
+
+    /**
+     * Preprocess data before populating the form.
+     * Maps legacy max_turns database values to min_turns if min_turns is empty.
+     *
+     * @param array $defaultvalues
+     */
+    public function data_preprocessing(&$defaultvalues) {
+        parent::data_preprocessing($defaultvalues);
+
+        if (isset($defaultvalues['max_turns']) && !isset($defaultvalues['min_turns'])) {
+            $defaultvalues['min_turns'] = $defaultvalues['max_turns'];
+        }
     }
 
     /**

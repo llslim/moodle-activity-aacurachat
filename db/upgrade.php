@@ -66,5 +66,21 @@ function xmldb_aacurachat_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026082100, 'mod', 'aacurachat');
     }
 
+    if ($oldversion < 2026100100) {
+        $table = new xmldb_table('aacurachat');
+
+        $oldfield = new xmldb_field('max_turns', XMLDB_TYPE_INTEGER, '6', null, null, null, '8', 'scenariocode');
+        if ($dbman->field_exists($table, $oldfield)) {
+            $dbman->rename_field($table, $oldfield, 'min_turns');
+        } else {
+            $newfield = new xmldb_field('min_turns', XMLDB_TYPE_INTEGER, '6', null, null, null, '8', 'scenariocode');
+            if (!$dbman->field_exists($table, $newfield)) {
+                $dbman->add_field($table, $newfield);
+            }
+        }
+
+        upgrade_plugin_savepoint(true, 2026100100, 'mod', 'aacurachat');
+    }
+
     return true;
 }

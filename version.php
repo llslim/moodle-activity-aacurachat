@@ -24,8 +24,8 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-$plugin->version = 2026082100;
-$plugin->release = "1.1.1";
+$plugin->version = 2026100100;
+$plugin->release = "1.2.0";
 $plugin->requires = 2025041400;
 $plugin->maturity = MATURITY_STABLE;
 $plugin->component = "mod_aacurachat";

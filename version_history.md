@@ -6,6 +6,7 @@ This log documents the commit history on the `dev` branch, mapping each update t
 
 | Commit Hash | Version | Commit Message / Description | Version Type |
 | :--- | :--- | :--- | :--- |
+| *pending* | **v1.2.0** | refactor: rename max_turns to min_turns in DB schema, upgrade script, and form (Issue #11) | **Minor Feature / Refactor** |
 | `8b772a1` | **v1.2.5** | fix: rename legacy geniai capability strings in lang file | Revision (Fix) |
 | `2f0ca2d` | **v1.2.4** | Fix CSS selectors prefix to match renamed mod_aacurachat activity name | Revision (Fix) |
 | `b8e14c7` | **v1.2.3** | fix: rename geniai references to aacurachat, restructure events/backup, and bump version | Revision (Fix) |

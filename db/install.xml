@@ -11,7 +11,7 @@
         <FIELD NAME="intro" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="introformat" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="scenariocode" TYPE="char" LENGTH="100" NOTNULL="true" DEFAULT="anna" SEQUENCE="false" COMMENT="Unique code of the active roleplay scenario"/>
-        <FIELD NAME="max_turns" TYPE="int" LENGTH="6" NOTNULL="false" DEFAULT="8" SEQUENCE="false" COMMENT="Per-activity override for max student turns before grading (0 = use global)"/>
+        <FIELD NAME="min_turns" TYPE="int" LENGTH="6" NOTNULL="false" DEFAULT="8" SEQUENCE="false" COMMENT="Per-activity override for min student turns before grading (0 = use global)"/>
         <FIELD NAME="parent_intensity" TYPE="char" LENGTH="20" NOTNULL="false" SEQUENCE="false" COMMENT="Per-activity parent assertiveness/aggressiveness level override (empty = global)"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
