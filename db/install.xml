@@ -3,16 +3,23 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd">
   <TABLES>
-    <TABLE NAME="aacurachat" COMMENT="Stores course certificate activity module instances.">
+    <TABLE NAME="aacurachat" COMMENT="Stores AACURA chatbot roleplay activity module instances.">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="course" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="name" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="intro" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="introformat" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
-        <FIELD NAME="scenariocode" TYPE="char" LENGTH="100" NOTNULL="true" DEFAULT="anna" SEQUENCE="false" COMMENT="Unique code of the active roleplay scenario"/>
-        <FIELD NAME="min_turns" TYPE="int" LENGTH="6" NOTNULL="false" DEFAULT="8" SEQUENCE="false" COMMENT="Per-activity override for min student turns before grading (0 = use global)"/>
-        <FIELD NAME="parent_intensity" TYPE="char" LENGTH="20" NOTNULL="false" SEQUENCE="false" COMMENT="Per-activity parent assertiveness/aggressiveness level override (empty = global)"/>
+        <FIELD NAME="topiccode" TYPE="char" LENGTH="100" NOTNULL="false" DEFAULT="parent_counseling" SEQUENCE="false" COMMENT="Selected Topic code from the Topic Library"/>
+        <FIELD NAME="scenariolist" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="JSON or CSV list of scenario codes enabled for this activity instance"/>
+        <FIELD NAME="scenariocode" TYPE="char" LENGTH="100" NOTNULL="true" DEFAULT="anna" SEQUENCE="false" COMMENT="Default starting scenario code for this activity"/>
+        <FIELD NAME="allow_persona_switch" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="1" SEQUENCE="false" COMMENT="Whether students can switch between enabled scenarios in this activity"/>
+        <FIELD NAME="grading_mode" TYPE="char" LENGTH="30" NOTNULL="true" DEFAULT="single_highest" SEQUENCE="false" COMMENT="Multi-scenario grading policy: single_highest, single_latest, or all_average"/>
+        <FIELD NAME="min_turns" TYPE="int" LENGTH="6" NOTNULL="false" DEFAULT="8" SEQUENCE="false" COMMENT="Per-activity override for min student turns before grading (0 = inherit)"/>
+        <FIELD NAME="parent_intensity" TYPE="char" LENGTH="20" NOTNULL="false" SEQUENCE="false" COMMENT="Per-activity persona assertiveness level override (empty = inherit)"/>
+        <FIELD NAME="generation_case" TYPE="char" LENGTH="30" NOTNULL="false" SEQUENCE="false" COMMENT="Per-activity AI generation profile override (empty = site default)"/>
+        <FIELD NAME="custom_prompt_template" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Optional per-activity persona system prompt override"/>
+        <FIELD NAME="custom_eval_template" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Optional per-activity rubric evaluation prompt override"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
       </FIELDS>

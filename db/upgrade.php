@@ -82,5 +82,34 @@ function xmldb_aacurachat_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026100100, 'mod', 'aacurachat');
     }
 
+    if ($oldversion < 2026110100) {
+        $table = new xmldb_table('aacurachat');
+
+        $fields = [
+            new xmldb_field('topiccode', XMLDB_TYPE_CHAR, '100', null, null, null, 'parent_counseling', 'introformat'),
+            new xmldb_field('scenariolist', XMLDB_TYPE_TEXT, null, null, null, null, null, 'topiccode'),
+            new xmldb_field('allow_persona_switch', XMLDB_TYPE_INTEGER, '2', null, XMLDB_NOTNULL, null, '1', 'scenariocode'),
+            new xmldb_field('grading_mode', XMLDB_TYPE_CHAR, '30', null, XMLDB_NOTNULL, null, 'single_highest', 'allow_persona_switch'),
+            new xmldb_field('generation_case', XMLDB_TYPE_CHAR, '30', null, null, null, null, 'parent_intensity'),
+            new xmldb_field('custom_prompt_template', XMLDB_TYPE_TEXT, null, null, null, null, null, 'generation_case'),
+            new xmldb_field('custom_eval_template', XMLDB_TYPE_TEXT, null, null, null, null, null, 'custom_prompt_template'),
+        ];
+
+        foreach ($fields as $field) {
+            if (!$dbman->field_exists($table, $field)) {
+                $dbman->add_field($table, $field);
+            }
+        }
+
+        // Populate scenariolist on existing activity instances so existing courses experience zero disruption.
+        $libpath = $CFG->dirroot . '/local/aacuracore/classes/library/topic_library_manager.php';
+        if (file_exists($libpath)) {
+            require_once($libpath);
+            \local_aacuracore\library\topic_library_manager::backfill_activity_scenariolists();
+        }
+
+        upgrade_plugin_savepoint(true, 2026110100, 'mod', 'aacurachat');
+    }
+
     return true;
 }
