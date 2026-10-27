@@ -24,12 +24,12 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-$plugin->version = 2026100100;
-$plugin->release = "1.2.0";
+$plugin->version = 2026110100;
+$plugin->release = "2.0.0";
 $plugin->requires = 2025041400;
 $plugin->maturity = MATURITY_STABLE;
 $plugin->component = "mod_aacurachat";
 
 $plugin->dependencies = [
-    "local_aacuracore" => 2026052500,
+    "local_aacuracore" => 2026110100,
 ];

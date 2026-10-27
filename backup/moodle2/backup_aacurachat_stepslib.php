@@ -42,7 +42,23 @@ class backup_aacurachat_activity_structure_step extends backup_activity_structur
      */
     protected function define_structure() {
         // Course certificate.
-        $fields = ["name", "timecreated", "timemodified", "intro", "introformat", "scenariocode"];
+        $fields = [
+            "name",
+            "timecreated",
+            "timemodified",
+            "intro",
+            "introformat",
+            "scenariocode",
+            "min_turns",
+            "parent_intensity",
+            "topiccode",
+            "scenariolist",
+            "allow_persona_switch",
+            "grading_mode",
+            "generation_case",
+            "custom_prompt_template",
+            "custom_eval_template",
+        ];
         $aacurachat = new backup_nested_element("aacurachat", ["id"], $fields);
 
         // Define the source tables for the elements.
@@ -50,6 +66,7 @@ class backup_aacurachat_activity_structure_step extends backup_activity_structur
 
         // Define file annotations.
         $aacurachat->annotate_files("mod_aacurachat", "intro", null); // This file area hasn't itemid.
+        $aacurachat->annotate_files("mod_aacurachat", "scenariofile", null);
 
         return $this->prepare_activity_structure($aacurachat);
     }

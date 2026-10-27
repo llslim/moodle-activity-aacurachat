@@ -1,11 +1,12 @@
 # AACURA Chat UI Activity Module Version History & Tagging Log
 
-### Current Version: **v1.2.5**
+### Current Version: **v2.0.0-dev** (Release `2.0.0`)
 
 This log documents the commit history across the `dev`, `dev-2.x` (2.x bug fixes), and `dev-3.x` (3.x major feature development) branches, mapping each update to its determined semantic version based on the project's git tagging policy (`main` holds the verified working release synced from `dev`).
 
 | Commit Hash | Version | Commit Message / Description | Version Type |
 | :--- | :--- | :--- | :--- |
+| *pending* | **v2.0.0** | **Major Release: Per-Activity Topic & Scenario Selection, Multi-Scenario Gradebook & Simulation Overrides** (Issues #18, #19, #20, #21) | **Major Feature / Milestone** |
 | *pending* | **v1.2.0** | refactor: rename max_turns to min_turns in DB schema, upgrade script, and form (Issue #11) | **Minor Feature / Refactor** |
 | `8b772a1` | **v1.2.5** | fix: rename legacy geniai capability strings in lang file | Revision (Fix) |
 | `2f0ca2d` | **v1.2.4** | Fix CSS selectors prefix to match renamed mod_aacurachat activity name | Revision (Fix) |

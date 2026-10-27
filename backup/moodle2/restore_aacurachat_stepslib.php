@@ -55,6 +55,27 @@ class restore_aacurachat_activity_structure_step extends restore_activity_struct
         global $DB;
         $data = (object) $data;
         $data->course = $this->get_courseid();
+
+        // Defaults for restoring backups from previous major versions.
+        if (empty($data->scenariocode)) {
+            $data->scenariocode = 'anna';
+        }
+        if (empty($data->topiccode)) {
+            $data->topiccode = 'parent_counseling';
+        }
+        if (empty($data->scenariolist)) {
+            $data->scenariolist = json_encode([$data->scenariocode]);
+        }
+        if (!isset($data->allow_persona_switch)) {
+            $data->allow_persona_switch = 1;
+        }
+        if (empty($data->grading_mode)) {
+            $data->grading_mode = 'single_highest';
+        }
+        if (!isset($data->generation_case)) {
+            $data->generation_case = '';
+        }
+
         // Insert the record.
         $newitemid = $DB->insert_record("aacurachat", $data);
         // Immediately after inserting "activity" record, call this.
@@ -66,5 +87,6 @@ class restore_aacurachat_activity_structure_step extends restore_activity_struct
      */
     protected function after_execute(): void {
         $this->add_related_files("mod_aacurachat", "intro", null);
+        $this->add_related_files("mod_aacurachat", "scenariofile", null);
     }
 }
