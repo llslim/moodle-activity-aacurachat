@@ -21,13 +21,22 @@
     {
         "geniainame": "Name",
         "manage_capability": true,
+        "editing": true,
+        "allow_persona_switch": true,
+        "topic_name": "Parent & Family AAC Counseling",
         "message_01": "string",
         "message_02": "string"
     }
 }}
 
 <div class="chat-container">
-    <div id="geniai-mod-popup" data-student-name="{{student_name}}" data-course-name="{{course_name}}" data-role-label="{{active_role_label}}">
+    <div id="geniai-mod-popup"
+         data-student-name="{{student_name}}"
+         data-course-name="{{course_name}}"
+         data-role-label="{{active_role_label}}"
+         data-cmid="{{cmid}}"
+         data-courseid="{{courseid}}"
+         data-topic-name="{{topic_name}}">
         <input type="hidden" id="local_aacuracore_message_01" value="{{message_01}}" />
         <input type="hidden" id="local_aacuracore_message_02" value="{{message_02}}" />
 
@@ -35,14 +44,21 @@
         <div class="geniai-header-panel">
             <div class="geniai-brand">
                 <span class="geniai-brand-icon">💬</span>
-                <span class="geniai-brand-text">AACURA Simulator</span>
+                <div>
+                    <span class="geniai-brand-text">AACURA Simulator</span>
+                    {{#topic_name}}
+                    <span id="geniai-topic-badge" class="geniai-topic-badge" title="Active Activity Topic">{{topic_name}}</span>
+                    {{/topic_name}}
+                </div>
             </div>
             <div class="geniai-controls">
                 <div class="geniai-dropdown-wrapper">
-                    <select id="geniai-persona-select" class="geniai-select-dropdown">
+                    <select id="geniai-persona-select"
+                            class="geniai-select-dropdown"
+                            {{^allow_persona_switch}}{{^editing}}disabled title="Persona selection is locked for this activity"{{/editing}}{{/allow_persona_switch}}>
                         <option value="" disabled {{^active_scenario}}selected{{/active_scenario}}>-- Select a {{^active_role_label}}Parent{{/active_role_label}}{{active_role_label}} --</option>
                         {{#personas_options}}
-                        <option value="{{code}}" {{#selected}}selected{{/selected}}>{{name}}</option>
+                        <option value="{{code}}" data-role-label="{{role_label}}" {{#selected}}selected{{/selected}}>{{name}}</option>
                         {{/personas_options}}
                     </select>
                 </div>
@@ -50,7 +66,10 @@
                     Generate PDF
                 </button>
                 {{#editing}}{{#manage_capability}}
-                <button id="geniai-ai-builder" class="geniai-pdf-btn" title="Launch Automated Scenario Builder (interactive interview)">
+                <button id="geniai-topic-drawer-btn" class="geniai-pdf-btn geniai-topic-btn" type="button" title="Configure Topic & Enabled Scenarios for this Activity">
+                    📚 Topic & Scenarios
+                </button>
+                <button id="geniai-ai-builder" class="geniai-pdf-btn" type="button" title="Launch Automated Scenario Builder (interactive interview)">
                     🧠 Automated Scenario Builder
                 </button>
                 {{/manage_capability}}{{/editing}}
@@ -61,11 +80,63 @@
         </div>
 
         {{#editing}}{{#manage_capability}}
+        <!-- Course Edit Mode: Inline Per-Activity Topic & Scenario Configuration Drawer -->
+        <div id="geniai-topic-drawer" class="geniai-topic-drawer" style="display: none;">
+            <div class="geniai-drawer-header">
+                <div>
+                    <strong>📚 Activity Topic & Scenario Configuration</strong>
+                    <span class="geniai-drawer-subtitle">Changes apply only to this activity instance (cmid {{cmid}}).</span>
+                </div>
+                <button type="button" id="geniai-drawer-close" class="geniai-clear-btn" style="padding: 4px 10px; font-size: 12px;">✕ Close</button>
+            </div>
+            <div class="geniai-drawer-grid">
+                <div class="geniai-drawer-field">
+                    <label for="geniai-drawer-topic">Conversation Topic</label>
+                    <select id="geniai-drawer-topic" class="geniai-select-dropdown"></select>
+                </div>
+                <div class="geniai-drawer-field">
+                    <label for="geniai-drawer-default-scenario">Default Starting Scenario</label>
+                    <select id="geniai-drawer-default-scenario" class="geniai-select-dropdown"></select>
+                </div>
+                <div class="geniai-drawer-field">
+                    <label for="geniai-drawer-allow-switch">Student Persona Switching</label>
+                    <select id="geniai-drawer-allow-switch" class="geniai-select-dropdown">
+                        <option value="1">Allow switching between enabled scenarios</option>
+                        <option value="0">Lock to Default Starting Scenario only</option>
+                    </select>
+                </div>
+                <div class="geniai-drawer-field">
+                    <label for="geniai-drawer-grading-mode">Multi-Scenario Grading Mode</label>
+                    <select id="geniai-drawer-grading-mode" class="geniai-select-dropdown">
+                        <option value="single_highest">Single Scenario — Highest Score (Default)</option>
+                        <option value="single_latest">Single Scenario — Most Recent Score</option>
+                        <option value="all_average">All Enabled Scenarios — Average Score</option>
+                    </select>
+                </div>
+            </div>
+            <div class="geniai-drawer-checklist-header">
+                <span>Enabled Scenarios for this Activity:</span>
+                <div>
+                    <button type="button" id="geniai-drawer-select-topic" class="geniai-clear-btn" style="padding: 2px 8px; font-size: 12px;">✓ Select All in Topic</button>
+                </div>
+            </div>
+            <div id="geniai-drawer-scenario-list" class="geniai-drawer-scenario-list"></div>
+            <div class="geniai-drawer-footer">
+                <span id="geniai-drawer-status" class="geniai-drawer-status"></span>
+                <button type="button" id="geniai-drawer-save" class="geniai-pdf-btn">💾 Save Activity Scenarios</button>
+            </div>
+        </div>
+
         <div id="geniai-statusbar" class="geniai-statusbar">
             <span id="geniai-status-text">💬 Conversing with {{active_role_label}}</span>
-            <button id="geniai-export-json" class="geniai-pdf-btn" title="Download the generated scenario as a JSON file">
-                ⬇️ Export JSON
-            </button>
+            <div style="margin-left: auto; display: flex; gap: 6px; align-items: center;">
+                <button id="geniai-save-library" class="geniai-pdf-btn" type="button" style="display: none; padding: 2px 10px; font-size: 0.75rem; background: #198754;" title="Save generated scenario to the Course Topic Library and enable it for this activity">
+                    ➕ Save to Activity & Topic Library
+                </button>
+                <button id="geniai-export-json" class="geniai-pdf-btn" type="button" title="Download the generated scenario as a JSON file">
+                    ⬇️ Export JSON
+                </button>
+            </div>
         </div>
         {{/manage_capability}}{{/editing}}
 
@@ -138,4 +209,3 @@
         applyLastClass();
     })();
 </script>
-

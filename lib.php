@@ -79,23 +79,16 @@ function aacurachat_add_instance(stdClass $data, $mform = null): int {
 
     $data->timecreated = time();
     $cmid = $data->coursemodule;
+    aacurachat_normalize_instance_data($data);
 
     $data->id = $DB->insert_record("aacurachat", $data);
 
     // We need to use context now, so we need to make sure all needed info is already in db.
     $DB->set_field("course_modules", "instance", $data->id, ["id" => $cmid]);
 
-    // Handle saving uploaded custom JSON scenario file
+    // Handle saving uploaded custom JSON scenario file and optional Course Library registration.
     if ($mform && isset($data->scenariofile)) {
-        $context = context_module::instance($cmid);
-        file_save_draft_area_files(
-            $data->scenariofile,
-            $context->id,
-            'mod_aacurachat',
-            'scenariofile',
-            0,
-            ['subdirs' => 0, 'maxfiles' => 1]
-        );
+        aacurachat_process_uploaded_scenario($data, (int)$cmid);
     }
 
     // Register with Moodle Gradebook
@@ -121,25 +114,148 @@ function aacurachat_update_instance(stdClass $data, $mform = null): bool {
 
     $data->timemodified = time();
     $data->id = $data->instance;
+    aacurachat_normalize_instance_data($data);
 
     $result = $DB->update_record("aacurachat", $data);
 
     if ($result && $mform && isset($data->scenariofile)) {
-        $context = context_module::instance($data->coursemodule);
-        file_save_draft_area_files(
-            $data->scenariofile,
-            $context->id,
-            'mod_aacurachat',
-            'scenariofile',
-            0,
-            ['subdirs' => 0, 'maxfiles' => 1]
-        );
+        aacurachat_process_uploaded_scenario($data, (int)$data->coursemodule);
     }
 
-    // Sync Gradebook properties
+    // Sync Gradebook properties and recalculate multi-scenario grades if grading_mode changed.
     aacurachat_grade_item_update($data);
+    aacurachat_update_grades($data);
 
     return $result;
+}
+
+/**
+ * Normalize per-activity Topic & Scenario fields before database insert/update.
+ *
+ * @param stdClass $data
+ */
+function aacurachat_normalize_instance_data(stdClass $data): void {
+    if (empty($data->scenariocode)) {
+        $data->scenariocode = 'anna';
+    }
+    if (empty($data->topiccode) || $data->topiccode === 'all') {
+        $data->topiccode = 'parent_counseling';
+    }
+
+    $cleanlist = [];
+    if (!empty($data->scenariolist)) {
+        $decoded = is_array($data->scenariolist) ? $data->scenariolist : json_decode((string)$data->scenariolist, true);
+        if (is_array($decoded)) {
+            foreach ($decoded as $code) {
+                $clean = clean_param((string)$code, PARAM_ALPHANUMEXT);
+                if ($clean !== '' && !in_array($clean, $cleanlist, true)) {
+                    $cleanlist[] = $clean;
+                }
+            }
+        }
+    }
+    if (empty($cleanlist)) {
+        $cleanlist = [$data->scenariocode];
+    }
+    if ($data->scenariocode !== 'custom' && !in_array($data->scenariocode, $cleanlist, true)) {
+        array_unshift($cleanlist, $data->scenariocode);
+    }
+    $data->scenariolist = json_encode(array_values($cleanlist));
+
+    $data->allow_persona_switch = isset($data->allow_persona_switch) ? (int)$data->allow_persona_switch : 1;
+    if (empty($data->grading_mode)) {
+        $data->grading_mode = 'single_highest';
+    }
+    if (!isset($data->generation_case)) {
+        $data->generation_case = '';
+    }
+}
+
+/**
+ * Save uploaded scenariofile to module filearea and optionally register in Course Topic Library.
+ *
+ * @param stdClass $data
+ * @param int $cmid
+ */
+function aacurachat_process_uploaded_scenario(stdClass $data, int $cmid): void {
+    global $DB, $CFG, $USER;
+
+    if ($cmid <= 0) {
+        return;
+    }
+
+    $context = context_module::instance($cmid);
+    file_save_draft_area_files(
+        $data->scenariofile,
+        $context->id,
+        'mod_aacurachat',
+        'scenariofile',
+        0,
+        ['subdirs' => 0, 'maxfiles' => 1]
+    );
+
+    if (empty($data->register_to_library)) {
+        return;
+    }
+
+    $fs = get_file_storage();
+    $files = $fs->get_area_files($context->id, 'mod_aacurachat', 'scenariofile', 0, 'id DESC', false);
+    if (empty($files)) {
+        return;
+    }
+
+    $file = reset($files);
+    $content = $file->get_content();
+    $decoded = json_decode($content, true);
+    if (!is_array($decoded) || empty($decoded['scenario_id'])) {
+        return;
+    }
+
+    $libpath = $CFG->dirroot . '/local/aacuracore/classes/library/topic_library_manager.php';
+    if (file_exists($libpath)) {
+        require_once($libpath);
+    }
+    if (!class_exists('\\local_aacuracore\\library\\topic_library_manager')) {
+        return;
+    }
+
+    try {
+        $def = \local_aacuracore\scenario\scenario_loader::from_array($decoded);
+        $role = $def->get_role();
+        $topiccode = !empty($data->topiccode) ? $data->topiccode : ($def->get_topic() ?: 'parent_counseling');
+        $decoded['topic'] = $topiccode;
+
+        $saved = \local_aacuracore\library\topic_library_manager::save_scenario([
+            'scenariocode' => $def->get_scenario_id(),
+            'topiccode' => $topiccode,
+            'name' => $def->get_persona_name(),
+            'role_type' => $role['type'] ?? 'parent',
+            'role_label' => $role['display_label'] ?? 'Parent',
+            'description' => $def->get_backstory(),
+            'json_data' => json_encode($decoded, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES),
+            'scope' => !empty($data->course) ? 'course' : 'system',
+            'courseid' => (int)($data->course ?? 0),
+            'is_builtin' => 0,
+            'enabled' => 1,
+            'userid' => (int)($USER->id ?? 0),
+        ]);
+
+        // Add the newly registered scenario to the activity's scenariolist.
+        $currentlist = json_decode($data->scenariolist ?? '[]', true);
+        if (!is_array($currentlist)) {
+            $currentlist = [];
+        }
+        if (!in_array($saved->scenariocode, $currentlist, true)) {
+            $currentlist[] = $saved->scenariocode;
+        }
+        $data->scenariolist = json_encode(array_values($currentlist));
+        if ($data->scenariocode === 'custom') {
+            $data->scenariocode = $saved->scenariocode;
+        }
+        $DB->update_record('aacurachat', $data);
+    } catch (\Throwable $e) {
+        // Keep the file in the activity filearea even if library registration fails.
+    }
 }
 
 /**

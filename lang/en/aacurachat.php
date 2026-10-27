@@ -50,3 +50,32 @@ $string['parent_intensity_low'] = 'Low (mildly assertive)';
 $string['parent_intensity_medium'] = 'Medium (moderately assertive)';
 $string['parent_intensity_high'] = 'High (assertive & firm)';
 $string['parent_intensity_very_high'] = 'Very High (confrontational, aggressive)';
+
+// v2.0 / Core v3.0 Per-Activity Topic & Scenario Library strings.
+$string['topicscenarioheader'] = 'Topic & Scenario Selection';
+$string['topiccode'] = 'Conversation Topic Category';
+$string['topiccode_help'] = 'Select a communication training topic from the Topic Library. Choosing a topic filters the scenario checklist below and provides topic-level default settings.';
+$string['topic_all'] = 'All Topics (Show all available scenarios)';
+$string['scenariolist'] = 'Enabled Roleplay Scenarios for this Activity';
+$string['scenariolist_help'] = 'Check one or more scenarios from the library to make them available in this activity. Each activity instance in a course can assign its own distinct topic and scenario set.';
+$string['defaultscenario'] = 'Default Starting Scenario';
+$string['defaultscenario_help'] = 'The scenario loaded automatically when a student first opens this activity.';
+$string['allow_persona_switch'] = 'Student Persona Switching';
+$string['allow_persona_switch_help'] = 'Control whether students can use the header dropdown to switch between the enabled scenarios in this activity, or if they are locked to the Default Starting Scenario.';
+$string['allow_persona_switch_yes'] = 'Allow students to switch between enabled scenarios';
+$string['allow_persona_switch_no'] = 'Lock students to the Default Starting Scenario only';
+$string['grading_mode'] = 'Multi-Scenario Grading Mode';
+$string['grading_mode_help'] = 'Determines how the Moodle gradebook score (out of 10) is calculated when multiple scenarios are enabled in this activity.';
+$string['grading_mode_single_highest'] = 'Single Scenario — Highest Score Across Enabled Scenarios (Default)';
+$string['grading_mode_single_latest'] = 'Single Scenario — Most Recent Completed Scenario';
+$string['grading_mode_all_average'] = 'All Enabled Scenarios — Average Score Across All Assigned Scenarios';
+$string['register_to_library'] = 'Register uploaded JSON in Course Topic Library';
+$string['register_to_library_desc'] = 'Also save the uploaded .json scenario into this course\'s Topic Library (assigned to the selected Topic above) so it can be reused across other activities in this course.';
+$string['generation_case'] = 'AI Generation Use Case Profile';
+$string['generation_case_help'] = 'Override the site-wide AI generation temperature/Top_p profile for this specific activity.';
+$string['generation_case_default'] = 'Default (use site-wide Use Case profile)';
+$string['custom_prompt_template'] = 'Activity Persona System Prompt Override (Optional)';
+$string['custom_prompt_template_help'] = 'Optional per-activity LLM system prompt template. Leave empty to inherit from the Scenario JSON or Site Default. Supports LAFF placeholders such as {{persona_name}}, {{role_display_label}}, {{backstory}}, {{pronoun}}, {{statekey}}, {{stateprompt}}, and {{parent_intensity}}.';
+$string['custom_eval_template'] = 'Activity Rubric Evaluation Prompt Override (Optional)';
+$string['custom_eval_template_help'] = 'Optional per-activity rubric evaluation system prompt. Leave empty to inherit the Site Default evaluation template. Use {{rubric}} to inject the scenario\'s per-state rubric criteria.';
+
