@@ -194,32 +194,71 @@ function aacurachat_grade_item_update(stdClass $aacurachat, $grades = null): int
 }
 
 /**
- * Update grades in the gradebook.
+ * Update grades in the gradebook for a specific mod_aacurachat activity instance.
+ * Queries sessions and evaluations by cmid and applies the activity's configured
+ * multi-scenario grading_mode (single_highest, single_latest, or all_average).
  *
- * @param stdClass $geniai
+ * @param stdClass $aacurachat
  * @param int $userid
  * @param bool $nullifnone
  */
 function aacurachat_update_grades(stdClass $aacurachat, int $userid = 0, bool $nullifnone = true): void {
-    global $DB;
+    global $DB, $CFG;
+
+    $cm = get_coursemodule_from_instance('aacurachat', $aacurachat->id, $aacurachat->course, false, IGNORE_MISSING);
+    $cmid = $cm ? (int)$cm->id : 0;
+
+    $libpath = $CFG->dirroot . '/local/aacuracore/classes/library/topic_library_manager.php';
+    if (file_exists($libpath)) {
+        require_once($libpath);
+    }
 
     $grades = [];
-    if ($userid) {
-        // Fetch specific user's session grades
-        $session = $DB->get_record('local_aacuracore_sessions', ['userid' => $userid, 'scenariocode' => $aacurachat->scenariocode], '*', IGNORE_MULTIPLE);
-        if ($session) {
-            $totalscore = 10;
-            $analytics = $DB->get_records('local_aacuracore_analytics', ['sessionid' => $session->id]);
-            $missedcount = 0;
-            foreach ($analytics as $analytic) {
-                if ($analytic->metric_value == 0.00) {
-                    $missedcount++;
-                }
+    $userids = [];
+    if ($userid > 0) {
+        $userids = [$userid];
+    } else if ($cmid > 0) {
+        $sessions = $DB->get_records('local_aacuracore_sessions', ['cmid' => $cmid], '', ' DISTINCT userid');
+        foreach ($sessions as $s) {
+            $userids[] = (int)$s->userid;
+        }
+    }
+
+    foreach ($userids as $uid) {
+        $computedscore = null;
+        if (class_exists('\\local_aacuracore\\library\\topic_library_manager')) {
+            $computedscore = \local_aacuracore\library\topic_library_manager::calculate_activity_grade($aacurachat, $cmid, $uid);
+        } else {
+            $params = ['userid' => $uid];
+            if ($cmid > 0) {
+                $params['cmid'] = $cmid;
+            } else {
+                $params['scenariocode'] = $aacurachat->scenariocode;
             }
+            $session = $DB->get_record('local_aacuracore_sessions', $params, '*', IGNORE_MULTIPLE);
+            if ($session) {
+                $totalscore = 10;
+                $analytics = $DB->get_records('local_aacuracore_analytics', ['sessionid' => $session->id]);
+                $missedcount = 0;
+                foreach ($analytics as $analytic) {
+                    if ($analytic->metric_value == 0.00) {
+                        $missedcount++;
+                    }
+                }
+                $computedscore = max(0, $totalscore - $missedcount);
+            }
+        }
+
+        if ($computedscore !== null) {
             $grade = new \stdClass();
-            $grade->userid = $userid;
-            $grade->rawgrade = max(0, $totalscore - $missedcount);
-            $grades[$userid] = $grade;
+            $grade->userid = $uid;
+            $grade->rawgrade = $computedscore;
+            $grades[$uid] = $grade;
+        } else if ($nullifnone && $userid > 0) {
+            $grade = new \stdClass();
+            $grade->userid = $uid;
+            $grade->rawgrade = null;
+            $grades[$uid] = $grade;
         }
     }
 

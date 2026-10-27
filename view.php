@@ -69,8 +69,12 @@ echo $OUTPUT->header();
 $capability = has_capability("local/aacuracore:manage", $context);
 
 $active_scenario = $aacurachat->scenariocode ?? 'anna';
-$activesession = $DB->get_record('local_aacuracore_sessions', ['userid' => $USER->id, 'courseid' => $course->id, 'cmid' => $cm->id], '*', IGNORE_MULTIPLE);
-if ($activesession) {
+if (class_exists('\\local_aacuracore\\api')) {
+    $activesession = \local_aacuracore\api::get_latest_active_session((int)$USER->id, (int)$course->id, (int)$cm->id);
+} else {
+    $activesession = $DB->get_record('local_aacuracore_sessions', ['userid' => $USER->id, 'courseid' => $course->id, 'cmid' => $cm->id], '*', IGNORE_MULTIPLE);
+}
+if ($activesession && !empty($activesession->scenariocode) && $activesession->scenariocode !== '__builder__') {
     $active_scenario = $activesession->scenariocode;
 }
 
@@ -78,7 +82,7 @@ if ($activesession) {
 $active_role_label = 'Parent';
 try {
     if (class_exists('\\local_aacuracore\\scenario\\scenario_loader')) {
-        $active_sc = \local_aacuracore\scenario\scenario_loader::load($active_scenario, $course->id);
+        $active_sc = \local_aacuracore\scenario\scenario_loader::load($active_scenario, $course->id, $cm->id);
         $activerole = $active_sc->get_role();
         if ($activerole && !empty($activerole['display_label'])) {
             $active_role_label = $activerole['display_label'];
@@ -159,6 +163,6 @@ $data["message_02"] = get_string(
 );
 
 echo $OUTPUT->render_from_template("mod_aacurachat/chat", $data);
-$PAGE->requires->js_call_amd("local_aacuracore/chat", "init", [$COURSE->id, release::version()]);
+$PAGE->requires->js_call_amd("local_aacuracore/chat", "init", [$COURSE->id, $cm->id, release::version()]);
 
 echo $OUTPUT->footer();
